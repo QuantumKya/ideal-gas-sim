@@ -1,8 +1,8 @@
 #include "point_graph.h"
 #include <stdlib.h>
-#include <string.h>
 
-#include "utility.h"
+#include "draw.h"
+#include "vecmath.h"
 
 void initPointGraph(PointGraph* g, int numPoints) {
     g->points = calloc(numPoints, sizeof(Vector2));
@@ -36,9 +36,7 @@ void addPoint(AdjList* adj, int i) {
 
 void addEdge(PointGraph* g, int a, int b) {
     AdjList* aEdges = &g->nodes[a];
-    AdjList* bEdges = &g->nodes[b];
-
-    addPoint(aEdges, b); addPoint(bEdges, a);
+    addPoint(aEdges, b);
 }
 
 
@@ -74,11 +72,24 @@ PointGraph* makeTriangle(Vector2 corner, Vector2 edge1, Vector2 edge2) {
 }
 
 PointGraph* makeParallelogram(Vector2 corner, Vector2 edge1, Vector2 edge2) {
+    Vector2 points[3];
+    points[0] = corner;
+    points[1] = Vector2Add(corner, edge1);
+    points[2] = Vector2Add(corner, edge2);
+    points[3] = Vector2Add(points[1], edge2);
 
+    return makePolygon(points, 4);
 }
 
 PointGraph* makeRegularPolygon(int sides, Vector2 origin, Vector2 v1) {
+    Vector2 pts[sides];
 
+    for (int i = 0; i < sides; i++) {
+        const Vector2 sidePoint = Vector2Rotate(v1, i * 360 / sides * DEG2RAD);
+        pts[i] = Vector2Add(origin, sidePoint);
+    }
+
+    return makePolygon(pts, sides);
 }
 
 
@@ -87,4 +98,19 @@ void translatePoints(PointGraph* g, Vector2 by) {
     for (int i = 0; i < g->pointCount; i++) {
         g->points[i] = Vector2Add(g->points[i], by);
     }
+}
+
+Vector2 getCentroid(PointGraph* g) {
+    Vector2 sum;
+    for (int i = 0; i < g->pointCount; i++) sum = Vector2Add(sum, g->points[i]);
+    return Vector2Scale(sum, 1/g->pointCount);
+}
+
+Vector2 correctNormal(PointGraph* g, int pId, Vector2 norm) {
+    const Vector2 c = getCentroid(g);
+    const Vector2 e = g->points[pId];
+
+    const Vector2 rel = Vector2Subtract(e, c);
+    if (Vector2DotProduct(rel, norm) > 0) return Vector2Negate(norm);
+    else return norm;
 }
