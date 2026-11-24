@@ -31,3 +31,4 @@ PointGraph* makeRegularPolygon(int sides, Vector2 origin, Vector2 v1);
 void translatePoints(PointGraph* g, Vector2 by);
 Vector2 getCentroid(PointGraph* g);
 Vector2 correctNormal(PointGraph* g, int edgeId, Vector2 norm);
+float getTotalLength(PointGraph* g);

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "draw.h"
-#include "vecmath.h"
 
 void initPointGraph(PointGraph* g, int numPoints) {
     g->points = calloc(numPoints, sizeof(Vector2));
@@ -101,9 +100,9 @@ void translatePoints(PointGraph* g, Vector2 by) {
 }
 
 Vector2 getCentroid(PointGraph* g) {
-    Vector2 sum;
+    Vector2 sum = {0, 0};
     for (int i = 0; i < g->pointCount; i++) sum = Vector2Add(sum, g->points[i]);
-    return Vector2Scale(sum, 1/g->pointCount);
+    return Vector2Scale(sum, 1.0f/g->pointCount);
 }
 
 Vector2 correctNormal(PointGraph* g, int pId, Vector2 norm) {
@@ -113,4 +112,23 @@ Vector2 correctNormal(PointGraph* g, int pId, Vector2 norm) {
     const Vector2 rel = Vector2Subtract(e, c);
     if (Vector2DotProduct(rel, norm) > 0) return Vector2Negate(norm);
     else return norm;
+}
+
+float getTotalLength(PointGraph* g) {
+    float total = 0.0f;
+
+    Vector2 e1; Vector2 e2;
+
+    for (int i = 0; i < g->pointCount; i++) {
+        e1 = g->points[i];
+        AdjList* adj = &g->nodes[i];
+
+        for (int k = 0; k < adj->count; k++) {
+            e2 = g->points[ adj->neighbors[k] ];
+
+            total += Vector2Distance(e1, e2);
+        }
+    }
+
+    return total;
 }

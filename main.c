@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "include/raylib.h"
 
 #include "src/const.h"
@@ -7,46 +5,65 @@
 #include "src/draw.h"
 #include "src/particle.h"
 #include "src/vecmath.h"
+#include "src/particle_system.h"
 
 
 int main() {
 
-    InitWindow(screenWidth, screenHeight, "Espy Orbital");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Espy Orbital");
     SetTargetFPS(60);
 
     // Font defFont = LoadFont("cmuntb.ttf");
 
-    PointGraph* testTriangle = makeRegularPolygon(5, (Vector2){ 500, 500 }, (Vector2){ 0, -400 });
+    PointGraph* testTriangle = makeRegularPolygon(5,
+        (Vector2){ SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 },
+        (Vector2){ 0, -400 }
+    );
+    const float totalWallLength = getTotalLength(testTriangle);
 
-    Particle* testParticles = calloc(50, sizeof(Particle));
-    for (int i = 0; i < 50; i++) {
-        testParticles[i].position = (Vector2){ 500, 800 };
-        testParticles[i].mass = 10;
+    ParticleSystem* particleSystem = initParticleSystem(200);
+    float currentPressure = 0.0f;
 
-        const float angle = randfRange(-PI, 0);
-        testParticles[i].momentum = Vector2Scale((Vector2){ cosf(angle), sinf(angle) }, 3000);
+    for (int i = 0; i < 200; i++) {
+        Particle* p = &particleSystem->particles[i];
+        p->position = (Vector2){ SCREEN_WIDTH/2 + randfRange(-200, 200), SCREEN_HEIGHT/2 + randfRange(-200, 200) };
+        p->mass = 10.0f;
+
+        const float angle = randfRange(-PI, PI);
+        p->velocity = Vector2Scale((Vector2){ cosf(angle), sinf(angle) }, 300);
     }
 
     //for (int i = 0; i < testTriangle->pointCount; i++) printVec(testTriangle->points[i]);
 
+    int frame = 0;
     while (!WindowShouldClose()) {
 
-        for (int i = 0; i < 50; i++) updateParticle(&testParticles[i], testTriangle);
+        updateSystem(particleSystem, testTriangle);
+
+        if (frame % PRESSURE_WAIT_TIME == 0) {
+            currentPressure = getPressure(totalWallLength, GetFrameTime());
+            pressureThisFrame = 0.0f;
+        }
         
         BeginDrawing();
         ClearBackground(BLACK);
 
-        drawPoints(testTriangle, 5, WHITE);
-        drawNormals(testTriangle, 20, 5, BLUE);
+            drawPoints(testTriangle, 5, WHITE);
+            drawNormals(testTriangle, 20, 5, BLUE);
+            
+            drawSystem(particleSystem, GREEN);
 
-        for (int i = 0; i < 50; i++) DrawCircleV(testParticles[i].position, particleRadius, GREEN);
+            DrawText(TextFormat("Current Pressure: %08.08f", currentPressure), 30, 30, 30, WHITE);
+
+            //drawPartitionSet(particleSystem->partition);
 
         EndDrawing();
+        frame++;
     }
     CloseWindow();
 
     freePointGraph(testTriangle);
-    free(testParticles);
+    freeParticleSystem(particleSystem);
 
     return 0;
 }

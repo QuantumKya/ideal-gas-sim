@@ -8,8 +8,9 @@ extern const float particleRadius;
 typedef struct {
     float mass;
     Vector2 position;
-    Vector2 momentum;
+    Vector2 velocity;
 } Particle;
 
 
-void updateParticle(Particle* p, PointGraph* g);
+// returns momentum transfer at wall
+float updateParticle(Particle* p, PointGraph* g);
