@@ -11,3 +11,5 @@ Vector2 getOutwardNormal(Vector2 endpoint1, Vector2 endpoint2, Vector2 center);
 float randfNormal();
 float randfRange(float min, float max);
 float randiRange(int min, int max);
+
+void setVectorLength(Vector2* vec, float length);

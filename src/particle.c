@@ -1,6 +1,7 @@
 #include "particle.h"
 #include "../include/raymath.h"
 #include "vecmath.h"
+#include "const.h"
 
 const float particleRadius = 5;
 
@@ -67,7 +68,9 @@ bool checkCollisionWall(Particle* p, Vector2 gCentroid, Vector2 endpoint1, Vecto
     if (penetration <= 0) return false; // particle hasn't actually touched the wall
 
     // add to total impulse
-    *moment = 2*p->mass * fabs(Vector2DotProduct(p->velocity, normal));
+    *moment = 
+        2.0f * (p->mass * DA_TO_KG)
+        * fabs(Vector2DotProduct(p->velocity, normal)) * METERS_PER_PIXEL;
 
     // clamp and bounce
     p->position = Vector2Add(p->position, Vector2Scale(normal, penetration));
@@ -75,4 +78,16 @@ bool checkCollisionWall(Particle* p, Vector2 gCentroid, Vector2 endpoint1, Vecto
 
 
     return true;
+}
+
+
+
+float getVelInMS(Particle* p) {
+    return Vector2Length(p->velocity) * METERS_PER_PIXEL;
+}
+float getParticleKE(Particle* p) {
+    const float massKg = p->mass * DA_TO_KG;
+    const float speedMS = getVelInMS(p);
+
+    return 0.5f * massKg * speedMS * speedMS;
 }

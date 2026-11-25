@@ -41,3 +41,14 @@ float randfRange(float min, float max) {
 float randiRange(int min, int max) {
     return (rand() % (max - min + 1)) + min;
 }
+
+
+
+void setVectorLength(Vector2* vec, float length) {
+    if (vec == NULL || !isfinite(length) || length < 0.0f) return;
+
+    const float oldLen = Vector2Length(*vec);
+    if (oldLen == 0.0f) return;
+    
+    *vec = Vector2Scale(*vec, length / oldLen);
+}

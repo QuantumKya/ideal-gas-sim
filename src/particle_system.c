@@ -1,7 +1,10 @@
 #include "particle_system.h"
-#include <stdlib.h>
 
 #include "../include/raylib.h"
+#include <stdlib.h>
+
+#include "vecmath.h"
+#include "const.h"
 
 float pressureThisFrame = 0.0f;
 
@@ -190,9 +193,57 @@ void drawSystem(ParticleSystem* ps, Color clr) {
 }
 
 
-float getPressure(float wallLength, float dt) {
+
+void setUpParticles(ParticleSystem* ps, float particleMass, float temperature) {
+    // using KE_per = 1/2 * m * v^2,
+    // v = sqrt(KE * 2/m)
+    const float massKg = particleMass * DA_TO_KG;
+    const float targetVelocity = sqrtf(BOLTZMANN * temperature * 2/massKg);
+
+    // set every particle's velocity to the desired average KE
+    for (int i = 0; i < ps->count; i++) {
+        Particle* p = &ps->particles[i];
+        p->mass = particleMass;
+        setVectorLength(&p->velocity, targetVelocity / METERS_PER_PIXEL);
+    }
+}
+
+
+
+float getPressure(float wallLengthPx, float dt) {
     const float delta_t = dt * PRESSURE_WAIT_TIME; // average over many timesteps to get good results
-    return pressureThisFrame / (wallLength * delta_t);
+    return pressureThisFrame / (wallLengthPx * METERS_PER_PIXEL * delta_t);
+}
+float getTotalKE(ParticleSystem* ps) {
+    float ke = 0.0f;
+    for (int i = 0; i < ps->count; i++) ke += getParticleKE(&ps->particles[i]);
+    return ke;
+}
+float getAvgKE(ParticleSystem* ps) {
+    return getTotalKE(ps) / (float)ps->count;
+}
+
+
+// using formula [avgKE] = 3/2 * k_B * T,
+// but gas is in 2D, so formula is [avgKE] = k_B * T.
+float getTemperature(ParticleSystem* ps) {
+    return getAvgKE(ps) / (BOLTZMANN);
+}
+void raiseTemperature(ParticleSystem* ps, float amount) { // `amount` is in K
+    // for a temperature change of dT,
+    // average kinetic energy must change by k_B * dT.
+    const float changeKE = BOLTZMANN * amount;
+
+    const float oldKE = getAvgKE(ps);
+    const float newKE = oldKE + changeKE;
+    if (newKE < 0) return;
+
+    const float changeFactor = sqrtf(newKE / oldKE);
+
+    for (int i = 0; i < ps->count; i++) {
+        Particle* p = &ps->particles[i];
+        p->velocity = Vector2Scale(p->velocity, changeFactor);
+    }
 }
 
 

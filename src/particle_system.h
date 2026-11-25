@@ -3,7 +3,7 @@
 #define MAX_DEPTH 4
 #define MAX_PER_QUAD 32
 
-#define PRESSURE_WAIT_TIME 120
+#define PRESSURE_WAIT_TIME 60
 
 /*
 typedef struct {
@@ -43,7 +43,19 @@ void drawSystem(ParticleSystem* ps, Color clr);
 void checkParticleCollisions(ParticleSystem*);
 
 
+// setting stuff for stuff :)
+
+void setUpParticles(ParticleSystem* ps, float particleMass, float temperature);
+
+
+// diagnostics
+
 float getPressure(float wallLength, float dt);
+float getTotalKE(ParticleSystem* ps);
+float getAvgKE(ParticleSystem* ps);
+
+float getTemperature(ParticleSystem* ps);
+void raiseTemperature(ParticleSystem* ps, float amount);
 
 
 /*
